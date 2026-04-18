@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Intelligence Fusion Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="sidebar" aria-label="Dashboard controls">
+        <div class="brand">
+          <p class="eyebrow">CYBERJOAR AI OC.41335</p>
+          <h1>Intelligence Fusion Dashboard</h1>
+          <p>
+            Fuse OSINT, HUMINT, and IMINT reports into one operational map for
+            quick geospatial analysis.
+          </p>
+          <p id="backendStatus" class="status-pill">Backend: checking...</p>
+        </div>
+
+        <div class="panel stats-grid" aria-label="Dataset summary">
+          <div>
+            <span id="totalRecords">0</span>
+            <p>Total records</p>
+          </div>
+          <div>
+            <span id="activeAlerts">0</span>
+            <p>High priority</p>
+          </div>
+          <div>
+            <span id="imageRecords">0</span>
+            <p>With images</p>
+          </div>
+        </div>
+
+        <form id="manualForm" class="panel form-panel">
+          <div class="section-heading">
+            <h2>Add Field Report</h2>
+            <p>Enter a report manually or upload CSV/JSON below.</p>
+          </div>
+
+          <label>
+            Title
+            <input id="titleInput" required placeholder="Border activity report" />
+          </label>
+
+          <div class="input-row">
+            <label>
+              Latitude
+              <input id="latInput" required type="number" step="any" placeholder="28.6139" />
+            </label>
+            <label>
+              Longitude
+              <input id="lngInput" required type="number" step="any" placeholder="77.2090" />
+            </label>
+          </div>
+
+          <div class="input-row">
+            <label>
+              Source
+              <select id="sourceInput">
+                <option value="OSINT">OSINT</option>
+                <option value="HUMINT">HUMINT</option>
+                <option value="IMINT">IMINT</option>
+              </select>
+            </label>
+            <label>
+              Priority
+              <select id="priorityInput">
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Low">Low</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            Details
+            <textarea id="detailsInput" rows="3" placeholder="Short intelligence note"></textarea>
+          </label>
+
+          <label>
+            Image
+            <input id="imageInput" type="file" accept="image/*" />
+          </label>
+
+          <div class="form-action-row">
+            <button type="submit">Add to Map</button>
+            <button id="cancelEdit" type="button" class="secondary" hidden>Cancel Edit</button>
+          </div>
+        </form>
+
+        <section class="panel">
+          <div class="section-heading">
+            <h2>Upload Data</h2>
+            <p>CSV/Excel/JSON columns: title, latitude, longitude, source, priority, details, imageUrl.</p>
+          </div>
+          <input id="dataUpload" type="file" accept=".csv,.json,.xls,.xlsx,application/json,text/csv" />
+          <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Drop CSV JSON Excel or image file">
+            Drag and drop CSV/JSON/Excel/image here
+          </div>
+          <div class="button-row">
+            <button id="loadSample" type="button" class="secondary">Load Sample</button>
+            <button id="exportData" type="button" class="secondary">Export JSON</button>
+            <button id="syncOsint" type="button" class="secondary">Sync OSINT (MongoDB/S3)</button>
+            <button id="dedupeData" type="button" class="secondary">Remove Duplicates</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="map-area" aria-label="Intelligence map">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">Live fused view</p>
+            <h2>Operational Map</h2>
+          </div>
+          <div class="filters" aria-label="Source filters">
+            <button class="filter active" data-filter="ALL" type="button">All</button>
+            <button class="filter" data-filter="OSINT" type="button">OSINT</button>
+            <button class="filter" data-filter="HUMINT" type="button">HUMINT</button>
+            <button class="filter" data-filter="IMINT" type="button">IMINT</button>
+          </div>
+        </div>
+
+        <div id="map"></div>
+
+        <aside class="intel-feed" aria-label="Latest intelligence feed">
+          <div class="section-heading">
+            <h2>Latest Reports</h2>
+            <p>Click any item to focus the marker.</p>
+          </div>
+          <div id="feedList" class="feed-list"></div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

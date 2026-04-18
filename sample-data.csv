@@ -1,0 +1,5 @@
+title,latitude,longitude,source,priority,details,imageUrl
+Suspicious movement near Ludhiana,30.9010,75.8573,HUMINT,High,Local source observed repeated movement after dark,https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=800&q=70
+Public report from Jalandhar,31.3260,75.5762,OSINT,Medium,Open web posts mention unusual activity near a public event,https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=70
+Imagery alert near Pathankot,32.2643,75.6421,IMINT,High,Uploaded imagery highlights temporary structures near a road junction,https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=70
+Routine movement near Udaipur,24.5854,73.7125,OSINT,Low,Public logistics updates indicate routine transport movement,https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?auto=format&fit=crop&w=800&q=70

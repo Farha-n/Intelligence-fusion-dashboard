@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: intelligence-fusion-dashboard
+    runtime: docker
+    rootDir: .
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB
+        value: cyberjoar
+      - key: MONGODB_COLLECTION
+        value: osint
+      - key: AWS_REGION
+        value: ap-south-1
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: AWS_S3_PREFIX
+        value: ""

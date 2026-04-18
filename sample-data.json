@@ -1,0 +1,29 @@
+[
+  {
+    "title": "OSINT activity near Delhi",
+    "latitude": 28.6139,
+    "longitude": 77.209,
+    "source": "OSINT",
+    "priority": "Medium",
+    "details": "Public feeds show unusual discussion around a major transport route.",
+    "imageUrl": "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=800&q=70"
+  },
+  {
+    "title": "HUMINT alert near Chandigarh",
+    "latitude": 30.7333,
+    "longitude": 76.7794,
+    "source": "HUMINT",
+    "priority": "High",
+    "details": "Field source reported suspicious vehicle movement after midnight.",
+    "imageUrl": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=70"
+  },
+  {
+    "title": "IMINT trace near Jaipur",
+    "latitude": 26.9124,
+    "longitude": 75.7873,
+    "source": "IMINT",
+    "priority": "High",
+    "details": "Image analysis indicates temporary setup near arterial road segment.",
+    "imageUrl": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=70"
+  }
+]
