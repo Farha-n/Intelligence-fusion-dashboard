@@ -17,14 +17,14 @@ The system fuses **OSINT**, **HUMINT**, and **IMINT** records into one terrain-b
 | OSINT ingestion | MongoDB OSINT sync endpoint, optional AWS S3 JSON/CSV sync |
 | HUMINT ingestion | Manual reports, CSV upload, JSON upload, Excel upload |
 | IMINT ingestion | Image upload with report metadata |
-| Terrain map | Leaflet with OpenTopoMap terrain tiles |
+| Terrain map | Leaflet with Esri World Topographic Map tiles |
 | Geospatial markers | Dynamic markers plotted using latitude and longitude |
 | Hover inspection | Marker popups show image, details, source, priority, and timestamp |
 | Unified dashboard | Search, filters, clustering, latest report feed, stats, export |
 
 ## Features
 
-- Interactive terrain map using Leaflet and OpenTopoMap
+- Interactive terrain map using Leaflet and Esri World Topographic Map
 - OSINT, HUMINT, and IMINT source categories
 - MongoDB Atlas persistence
 - Temporary in-memory fallback if MongoDB is unavailable
@@ -46,7 +46,7 @@ The system fuses **OSINT**, **HUMINT**, and **IMINT** records into one terrain-b
 | Layer | Technology |
 |---|---|
 | Frontend | HTML, CSS, JavaScript |
-| Map | Leaflet, Leaflet MarkerCluster, OpenTopoMap |
+| Map | Leaflet, Leaflet MarkerCluster, Esri World Topographic Map |
 | Backend | Node.js, Express.js |
 | Database | MongoDB Atlas |
 | File Uploads | Multer |

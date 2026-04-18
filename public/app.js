@@ -12,11 +12,13 @@ let editingTimestamp = "";
 const map = L.map("map", { zoomControl: false }).setView([29.8, 76.4], 6);
 L.control.zoom({ position: "bottomleft" }).addTo(map);
 
-L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-  maxZoom: 17,
-  attribution:
-    "Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)",
-}).addTo(map);
+L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+  {
+    maxZoom: 19,
+    attribution: "Tiles &copy; Esri | Data &copy; OpenStreetMap contributors",
+  },
+).addTo(map);
 
 const markerCluster = L.markerClusterGroup({
   showCoverageOnHover: false,
