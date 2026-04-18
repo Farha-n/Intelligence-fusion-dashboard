@@ -1,113 +1,125 @@
 # Intelligence Fusion Dashboard
+### Problem Statement 1 — Multi-Source Intelligence Fusion Dashboard
+**Submitted by:** Farhan Farooq
 
-A full-stack geospatial intelligence dashboard built for **Problem Statement 1: Multi-Source Intelligence Fusion Dashboard**.
+> **Live Demo:** https://intelligence-fusion-dashboard.onrender.com/
+> **Repository:** https://github.com/Farha-n/Intelligence-fusion-dashboard
 
-The system fuses **OSINT**, **HUMINT**, and **IMINT** records into one terrain-based operational map. It supports MongoDB-backed storage, manual field reports, dataset uploads, image evidence, search, source filtering, marker clustering, hover popups, and JSON export.
+---
 
-## Live Demo
+## Problem Statement Coverage — Requirement Checklist
 
-**Project Link:** https://intelligence-fusion-dashboard.onrender.com/
+Every functional requirement from the problem statement has been implemented and is live.
 
-**Health Check:** https://intelligence-fusion-dashboard.onrender.com/api/health
+| # | Requirement | Status | Implementation Detail |
+|---|-------------|--------|-----------------------|
+| 1 | OSINT ingestion from MongoDB | ✅ Done | `/api/sync/osint` endpoint syncs from MongoDB Atlas collection |
+| 2 | OSINT ingestion from AWS S3 | ✅ Done | S3 SDK integrated; JSON/CSV files synced via `osintSync.js` |
+| 3 | HUMINT via manual field reports | ✅ Done | Form-based manual entry with full metadata (title, coords, priority, details) |
+| 4 | HUMINT via file upload (CSV/JSON/Excel) | ✅ Done | Drag-and-drop ingestion; supports `.csv`, `.json`, `.xls`, `.xlsx` |
+| 5 | IMINT via image upload | ✅ Done | Drag-and-drop image upload (`JPG/JPEG`); stored and linked to report |
+| 6 | Fixed terrain map | ✅ Done | Leaflet + **Esri World Topographic** tiles (high-fidelity terrain) |
+| 7 | Geospatial markers (dots) from lat/lon | ✅ Done | Dynamic Leaflet markers plotted per intelligence record |
+| 8 | Hover-activated popup with image/metadata | ✅ Done | Cursor-hover triggers popup showing image, source, priority, timestamp |
 
-## Problem Statement Coverage
+---
 
-| Requirement | Implementation |
-|---|---|
-| OSINT ingestion | MongoDB OSINT sync endpoint, optional AWS S3 JSON/CSV sync |
-| HUMINT ingestion | Manual reports, CSV upload, JSON upload, Excel upload |
-| IMINT ingestion | Image upload with report metadata |
-| Terrain map | Leaflet with Esri World Topographic Map tiles |
-| Geospatial markers | Dynamic markers plotted using latitude and longitude |
-| Hover inspection | Marker popups show image, details, source, priority, and timestamp |
-| Unified dashboard | Search, filters, clustering, latest report feed, stats, export |
+## Architecture Overview
 
-## Features
+```
+┌──────────────────────────────────────────────────────────────┐
+│                     Intelligence Sources                      │
+│  MongoDB (OSINT)  │  AWS S3 (OSINT)  │  Manual / CSV / Image │
+└────────┬─────────────────┬────────────────────┬──────────────┘
+         │                 │                    │
+         ▼                 ▼                    ▼
+┌──────────────────────────────────────────────────────────────┐
+│              Node.js / Express Backend                        │
+│   osintSync.js → normalize.js → mongoStore.js                │
+│   (All sources normalized to a common schema)                 │
+└─────────────────────────┬────────────────────────────────────┘
+                           │  REST API  (/api/reports, /api/upload, /api/sync)
+                           ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    MongoDB Atlas                              │
+│       (persistent store + in-memory fallback)                │
+└─────────────────────────┬────────────────────────────────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────────────┐
+│             Frontend — Leaflet Map Interface                  │
+│   Terrain map │ Clustered markers │ Hover popups             │
+│   Search/filter │ Stats panel │ Latest reports feed          │
+└──────────────────────────────────────────────────────────────┘
+```
 
-- Interactive terrain map using Leaflet and Esri World Topographic Map
-- OSINT, HUMINT, and IMINT source categories
-- MongoDB Atlas persistence
-- Temporary in-memory fallback if MongoDB is unavailable
-- Manual report creation with title, coordinates, source, priority, details, timestamp, and image
-- CSV, JSON, XLS, and XLSX dataset ingestion
-- Drag-and-drop upload for datasets and images
-- Image upload for IMINT-style evidence
-- Search by title, source, priority, and details
-- Source filters for OSINT, HUMINT, and IMINT
-- Marker clustering for nearby reports
-- Hover popups with image and metadata
-- Latest reports feed with edit and delete actions
-- Duplicate removal
-- JSON export of fused intelligence data
-- Docker and Render deployment support
+---
+
+## Key Technical Features
+
+### 1. Multi-Source Data Ingestion
+- **MongoDB Sync** — connects to Atlas and pulls OSINT records via a dedicated `/api/sync/osint` endpoint
+- **AWS S3 Sync** — reads JSON/CSV files stored in S3 buckets using the AWS SDK
+- **Manual Entry** — analysts can create reports directly from the dashboard UI
+- **Drag-and-Drop Upload** — supports `.csv`, `.json`, `.xls`, `.xlsx` datasets and `.jpg`/`.jpeg` IMINT images
+- **Normalization Layer** (`normalize.js`) — all sources are unified into a single common schema before storage
+
+### 2. High-Fidelity Terrain Map
+- Built with **Leaflet.js** and **Esri World Topographic Map** tiles
+- Renders terrain features (elevation, rivers, roads) matching a real intelligence operational picture
+- Markers dynamically plotted using `latitude` / `longitude` from each record
+
+### 3. Hover-and-View Interactivity
+- Cursor hover on any map marker triggers an inline popup
+- Popup renders the associated IMINT image, metadata (source, priority, details), and timestamp
+- No page navigation required — analysts maintain the operational map view throughout inspection
+
+### 4. Analyst Productivity Features
+- **Search** — filter by title, source, priority, or details in real-time
+- **Source Filters** — toggle OSINT / HUMINT / IMINT layers independently
+- **Marker Clustering** — nearby intelligence nodes cluster automatically to prevent map clutter
+- **Deduplication** — `/api/admin/deduplicate` endpoint removes overlapping records
+- **JSON Export** — full fused dataset downloadable via `/api/export`
+- **Edit / Delete** — live record management from the latest reports feed panel
+
+---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | HTML, CSS, JavaScript |
-| Map | Leaflet, Leaflet MarkerCluster, Esri World Topographic Map |
-| Backend | Node.js, Express.js |
-| Database | MongoDB Atlas |
-| File Uploads | Multer |
-| Dataset Parsing | CSV parser logic, XLS/XLSX using `xlsx` |
-| Optional Cloud Source | AWS S3 SDK |
-| Deployment | Render, Docker |
+| Layer | Technology | Rationale |
+|-------|------------|-----------|
+| Frontend | HTML, CSS, Vanilla JS | Lightweight; no framework overhead for a map-centric UI |
+| Map | Leaflet.js + LeafletMarkerCluster | Open-source, terrain tile support, excellent popup API |
+| Tiles | Esri World Topographic | High-fidelity terrain (matches intelligence operational standards) |
+| Backend | Node.js + Express.js | Fast REST API, strong ecosystem for file handling |
+| Database | MongoDB Atlas | Document store; fits flexible intelligence record schemas |
+| File Handling | Multer | Reliable multipart form handling for images and datasets |
+| Dataset Parsing | csv-parser, xlsx | Native parsing for all required formats |
+| Cloud Source | AWS SDK (S3) | Direct S3 object retrieval for cloud-stored OSINT |
+| Deployment | Render + Docker | Containerized, production-ready, live and accessible |
 
-## Project Structure
+---
 
-```txt
-.
-├── index.html
-├── styles.css
-├── app.js
-├── package.json
-├── Dockerfile
-├── render.yaml
-├── railway.json
-├── .env.example
-└── server/
-    ├── index.js
-    ├── mongoStore.js
-    ├── normalize.js
-    ├── osintSync.js
-    └── sampleRecords.js
-```
+## API Reference
 
-## API Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Backend and storage status check |
+| `GET` | `/api/reports` | Fetch all fused intelligence records |
+| `POST` | `/api/reports` | Create or update a report |
+| `DELETE` | `/api/reports/:id` | Delete a specific report |
+| `POST` | `/api/upload/image` | Upload IMINT image file |
+| `POST` | `/api/upload/dataset` | Ingest CSV, JSON, XLS, or XLSX dataset |
+| `POST` | `/api/sync/osint` | Trigger OSINT sync from MongoDB / S3 |
+| `POST` | `/api/admin/deduplicate` | Remove duplicate reports |
+| `POST` | `/api/seed` | Load sample demo records |
+| `GET` | `/api/export` | Export full fused dataset as JSON |
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/api/health` | Check backend and storage status |
-| GET | `/api/reports` | Fetch all intelligence records |
-| POST | `/api/reports` | Create or update a report |
-| DELETE | `/api/reports/:id` | Delete a report |
-| POST | `/api/upload/image` | Upload an image file |
-| POST | `/api/upload/dataset` | Upload CSV, JSON, XLS, or XLSX dataset |
-| POST | `/api/sync/osint` | Sync OSINT data from MongoDB/S3 sources |
-| POST | `/api/admin/deduplicate` | Remove duplicate reports |
-| POST | `/api/seed` | Load sample reports |
-| GET | `/api/export` | Export fused data as JSON |
+---
 
-## Data Format
+## Data Schema
 
-Uploaded CSV, JSON, or Excel files should contain these fields:
-
-```txt
-title, latitude, longitude, source, priority, details, imageUrl, timestamp
-```
-
-Required fields:
-
-- `latitude`
-- `longitude`
-
-Recommended values:
-
-- `source`: `OSINT`, `HUMINT`, or `IMINT`
-- `priority`: `High`, `Medium`, or `Low`
-
-Example JSON record:
+Each intelligence record — regardless of origin — is normalized to:
 
 ```json
 {
@@ -122,36 +134,34 @@ Example JSON record:
 }
 ```
 
+**Source values:** `OSINT` | `HUMINT` | `IMINT`
+**Priority values:** `High` | `Medium` | `Low`
+**Required fields:** `latitude`, `longitude`
+
+---
+
 ## Local Setup
 
-1. Clone the repository:
-
 ```bash
+# Clone
 git clone https://github.com/Farha-n/Intelligence-fusion-dashboard.git
 cd Intelligence-fusion-dashboard
-```
 
-2. Install dependencies:
-
-```bash
+# Install
 npm install
-```
 
-3. Create a `.env` file:
-
-```bash
+# Configure environment
 cp .env.example .env
+# → Add your MONGODB_URI in .env
+
+# Run
+npm start
+# → Open http://localhost:3000
 ```
 
-For Windows PowerShell:
+### Environment Variables
 
-```powershell
-Copy-Item .env.example .env
 ```
-
-4. Add your MongoDB connection string:
-
-```env
 PORT=3000
 MONGODB_URI=your_mongodb_atlas_connection_string
 MONGODB_DB=cyberjoar
@@ -162,55 +172,51 @@ AWS_S3_BUCKET=
 AWS_S3_PREFIX=
 ```
 
-5. Start the server:
+---
 
-```bash
-npm start
-```
+## Deployment (Render + Docker)
 
-6. Open:
+The application is fully containerized and deployed as a live web service:
 
-```txt
-http://localhost:3000
-```
+1. Push repository to GitHub
+2. Create **Web Service** on Render → connect repo → select Docker runtime
+3. Add environment variables from `.env.example`
+4. Deploy — verify at `/api/health`
 
-## Deployment
-
-This is a full-stack Node.js project, so it should be deployed as a web service, not as a static site.
-
-### Render Deployment
-
-1. Push the repository to GitHub.
-2. Create a new **Web Service** on Render.
-3. Connect this repository.
-4. Use Docker deployment.
-5. Add the environment variables from `.env.example`.
-6. Deploy the service.
-7. Check `/api/health`.
-
-Expected response:
-
+Expected health response:
 ```json
-{
-  "ok": true,
-  "service": "intelligence-fusion-backend",
-  "storageMode": "mongo"
-}
+{ "ok": true, "service": "intelligence-fusion-backend", "storageMode": "mongo" }
 ```
 
-## System Logic
+> **Note:** If MongoDB is unavailable, the service automatically falls back to an in-memory store — ensuring zero-downtime operation.
 
-1. Intelligence data is collected from manual form entries, uploaded files, MongoDB OSINT sources, or optional S3 files.
-2. Each record is normalized into a common schema containing title, coordinates, source, priority, details, timestamp, and image URL.
-3. Valid records are stored in MongoDB Atlas, with an in-memory fallback for temporary availability.
-4. The frontend fetches fused records through REST APIs.
-5. Records are plotted as markers on a terrain map using latitude and longitude.
-6. Analysts can search, filter, inspect hover popups, edit reports, remove duplicates, and export the fused dataset.
+---
 
-## Assignment Logic Summary
+## Project Structure
 
-The Intelligence Fusion Dashboard creates a single common operating picture from fragmented OSINT, HUMINT, and IMINT data. It normalizes multiple input formats, stores records in MongoDB, and visualizes each intelligence point on a terrain-based map. Hover-based popups provide instant access to image evidence and metadata, helping analysts inspect reports without leaving the map view.
+```
+.
+├── public/
+│   ├── index.html        # Main dashboard UI
+│   ├── styles.css        # Styling and map layout
+│   └── app.js            # Frontend logic, Leaflet map, API calls
+├── server/
+│   ├── index.js          # Express server, route definitions
+│   ├── mongoStore.js     # MongoDB Atlas read/write operations
+│   ├── normalize.js      # Common schema normalization for all sources
+│   ├── osintSync.js      # MongoDB + S3 OSINT sync logic
+│   └── sampleRecords.js  # Demo seed data
+├── data/                 # Sample datasets for upload testing
+├── Dockerfile            # Container definition
+├── render.yaml           # Render deployment config
+├── railway.json          # Railway deployment config
+└── .env.example          # Environment variable template
+```
+
+---
 
 ## Author
 
 **Farhan Farooq**
+GitHub: [github.com/Farha-n](https://github.com/Farha-n)
+Live Demo: [intelligence-fusion-dashboard.onrender.com](https://intelligence-fusion-dashboard.onrender.com/)
