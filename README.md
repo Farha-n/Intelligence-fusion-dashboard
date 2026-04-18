@@ -5,13 +5,17 @@ Fullstack geospatial intelligence dashboard that fuses OSINT, HUMINT, and IMINT 
 ## What Is Implemented
 
 - Frontend map dashboard with interactive intelligence markers
+- Search by title, source, priority, and details
+- Marker clustering for nearby reports
 - Backend REST API for report ingestion, retrieval, and export
 - Manual report entry with image upload
+- Timestamp field for report create/edit
 - CSV/JSON/Excel (XLS/XLSX) ingestion
 - Drag-and-drop ingestion for datasets and images
 - OSINT sync endpoint integrating MongoDB and AWS S3 sources
 - Hover-activated marker popups for image/metadata inspection
 - Terrain map rendering using OpenTopoMap tiles in Leaflet
+- Automatic fallback to temporary in-memory storage if MongoDB is unavailable
 
 ## Project Structure
 
@@ -23,6 +27,7 @@ Fullstack geospatial intelligence dashboard that fuses OSINT, HUMINT, and IMINT 
 - `server/normalize.js` - Data normalization and CSV parsing
 - `server/mongoStore.js` - MongoDB persistence utilities
 - `.env.example` - Environment template for cloud connectors
+- `sample-s3-osint.json` - Sample S3 object content for OSINT sync testing
 
 ## Functional Coverage vs Statement
 

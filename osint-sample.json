@@ -1,0 +1,20 @@
+[
+  {
+    "title": "OSINT report from S3 - Delhi transport hub",
+    "latitude": 28.6139,
+    "longitude": 77.209,
+    "source": "OSINT",
+    "priority": "High",
+    "details": "S3 OSINT feed detected unusual public activity near a major transport zone.",
+    "imageUrl": "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=800&q=70"
+  },
+  {
+    "title": "OSINT report from S3 - Amritsar border zone",
+    "latitude": 31.634,
+    "longitude": 74.8723,
+    "source": "OSINT",
+    "priority": "Medium",
+    "details": "Cloud OSINT dataset indicates increased online mentions around a sensitive area.",
+    "imageUrl": "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=70"
+  }
+]

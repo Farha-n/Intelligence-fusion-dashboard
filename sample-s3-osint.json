@@ -1,0 +1,12 @@
+[
+  {
+    "title": "S3 OSINT sample near Lucknow",
+    "latitude": 26.8467,
+    "longitude": 80.9462,
+    "source": "OSINT",
+    "priority": "Medium",
+    "details": "Sample cloud object record for Sync OSINT validation.",
+    "imageUrl": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=70",
+    "timestamp": "2026-04-18T11:55:00.000Z"
+  }
+]

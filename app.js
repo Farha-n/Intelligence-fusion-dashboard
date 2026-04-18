@@ -3,9 +3,11 @@ const fallbackImage =
 
 let records = [];
 let activeFilter = "ALL";
+let searchQuery = "";
 let markers = new Map();
 let editingRecordId = null;
 let editingImageUrl = "";
+let editingTimestamp = "";
 
 const map = L.map("map", { zoomControl: false }).setView([29.8, 76.4], 6);
 L.control.zoom({ position: "bottomleft" }).addTo(map);
@@ -15,6 +17,13 @@ L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
   attribution:
     "Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)",
 }).addTo(map);
+
+const markerCluster = L.markerClusterGroup({
+  showCoverageOnHover: false,
+  spiderfyOnMaxZoom: true,
+  maxClusterRadius: 42,
+});
+map.addLayer(markerCluster);
 
 const sourceClass = (source) => String(source || "OSINT").toLowerCase();
 
@@ -74,11 +83,13 @@ function markerIcon(record) {
 function popupHtml(record, stackCount = 1) {
   const stackBadge =
     stackCount > 1 ? `<span class="badge stack">${stackCount} reports here</span>` : "";
+  const timeLabel = formatTimestamp(record.timestamp);
   return `
     <article class="popup-card">
       <img src="${record.imageUrl || fallbackImage}" alt="${record.title}" />
       <h3>${record.title}</h3>
       <p>${record.details}</p>
+      <p><strong>Time:</strong> ${timeLabel}</p>
       <div class="badge-row">
         <span class="badge">${record.source}</span>
         <span class="badge ${record.priority.toLowerCase()}">${record.priority}</span>
@@ -89,9 +100,44 @@ function popupHtml(record, stackCount = 1) {
 }
 
 function visibleRecords() {
-  return activeFilter === "ALL"
+  const bySource = activeFilter === "ALL"
     ? records
     : records.filter((record) => record.source === activeFilter);
+
+  const query = searchQuery.trim().toLowerCase();
+  if (!query) {
+    return bySource;
+  }
+
+  return bySource.filter((record) => {
+    const haystack = [record.title, record.source, record.priority, record.details]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(query);
+  });
+}
+
+function formatTimestamp(timestamp) {
+  const value = timestamp ? new Date(timestamp) : new Date();
+  if (Number.isNaN(value.getTime())) {
+    return "N/A";
+  }
+  return value.toLocaleString();
+}
+
+function toDateTimeLocalValue(timestamp) {
+  const value = timestamp ? new Date(timestamp) : new Date();
+  if (Number.isNaN(value.getTime())) {
+    return "";
+  }
+
+  const pad = (num) => String(num).padStart(2, "0");
+  const yyyy = value.getFullYear();
+  const mm = pad(value.getMonth() + 1);
+  const dd = pad(value.getDate());
+  const hh = pad(value.getHours());
+  const min = pad(value.getMinutes());
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
 }
 
 function computeMarkerLayout(shownRecords) {
@@ -130,6 +176,7 @@ function computeMarkerLayout(shownRecords) {
 
 function renderMap() {
   markers.forEach((marker) => marker.remove());
+  markerCluster.clearLayers();
   markers = new Map();
 
   const shownRecords = visibleRecords();
@@ -143,8 +190,9 @@ function renderMap() {
     const marker = L.marker(markerLatLng, {
       icon: markerIcon(record),
     })
-      .addTo(map)
       .bindPopup(popupHtml(record, stackCount));
+
+    markerCluster.addLayer(marker);
 
     marker.on("mouseover", () => marker.openPopup());
     markers.set(record.id, marker);
@@ -181,6 +229,7 @@ function renderFeed() {
         <div>
           <h3>${record.title}</h3>
           <p>${record.details}</p>
+          <p>${formatTimestamp(record.timestamp)}</p>
           <div class="badge-row">
             <span class="badge">${record.source}</span>
             <span class="badge ${record.priority.toLowerCase()}">${record.priority}</span>
@@ -242,12 +291,15 @@ function setFormModeEditing(isEditing) {
 function clearEditState() {
   editingRecordId = null;
   editingImageUrl = "";
+  editingTimestamp = "";
+  document.querySelector("#timestampInput").value = toDateTimeLocalValue(new Date().toISOString());
   setFormModeEditing(false);
 }
 
 function setEditingRecord(record) {
   editingRecordId = record.id;
   editingImageUrl = record.imageUrl || fallbackImage;
+  editingTimestamp = record.timestamp || "";
 
   document.querySelector("#titleInput").value = record.title;
   document.querySelector("#latInput").value = record.latitude;
@@ -255,6 +307,7 @@ function setEditingRecord(record) {
   document.querySelector("#sourceInput").value = record.source;
   document.querySelector("#priorityInput").value = record.priority;
   document.querySelector("#detailsInput").value = record.details;
+  document.querySelector("#timestampInput").value = toDateTimeLocalValue(record.timestamp);
   document.querySelector("#imageInput").value = "";
 
   setFormModeEditing(true);
@@ -321,6 +374,10 @@ document.querySelector("#manualForm").addEventListener("submit", async (event) =
     const imageUrl = imageFile
       ? await readImageAndUpload(imageFile)
       : editingImageUrl || fallbackImage;
+    const timestampInput = document.querySelector("#timestampInput").value;
+    const timestamp = timestampInput
+      ? new Date(timestampInput).toISOString()
+      : editingTimestamp || new Date().toISOString();
 
     const payload = normalizeRecord({
       id: editingRecordId || undefined,
@@ -331,6 +388,7 @@ document.querySelector("#manualForm").addEventListener("submit", async (event) =
       priority: document.querySelector("#priorityInput").value,
       details: document.querySelector("#detailsInput").value,
       imageUrl,
+      timestamp,
     });
 
     await apiRequest("/api/reports", {
@@ -462,7 +520,13 @@ dropzone.addEventListener("keydown", (event) => {
   }
 });
 
+document.querySelector("#searchInput").addEventListener("input", (event) => {
+  searchQuery = event.target.value || "";
+  render();
+});
+
 async function init() {
+  document.querySelector("#timestampInput").value = toDateTimeLocalValue(new Date().toISOString());
   await updateBackendStatus();
   await refreshRecords();
 }

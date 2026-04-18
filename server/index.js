@@ -15,6 +15,7 @@ const {
   deleteReportById,
   deduplicateReports,
   replaceAllReports,
+  getStorageMode,
 } = require("./mongoStore");
 
 dotenv.config();
@@ -45,7 +46,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, service: "intelligence-fusion-backend" });
+  res.json({ ok: true, service: "intelligence-fusion-backend", storageMode: getStorageMode() });
 });
 
 app.get("/api/reports", async (req, res) => {
