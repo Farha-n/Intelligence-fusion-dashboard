@@ -295,7 +295,7 @@ button.filter.active {
 }
 
 #map {
-  min-height: 580px;
+  min-height: 680px;
   width: 100%;
 }
 
@@ -334,6 +334,24 @@ button.filter.active {
 
 .feed-item:hover {
   border-color: var(--accent);
+  background: #f1f8f5;
+  box-shadow: 0 10px 22px rgba(15, 118, 110, 0.12);
+}
+
+.feed-item:focus-within {
+  border-color: var(--accent);
+  background: #edf7f3;
+}
+
+.feed-empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed #bfd0ca;
+  border-radius: 8px;
+  background: #f7fbf9;
+  color: #4a5d57;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .feed-item img {

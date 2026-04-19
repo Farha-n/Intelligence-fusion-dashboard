@@ -14,7 +14,6 @@ const {
   upsertReports,
   deleteReportById,
   deduplicateReports,
-  replaceAllReports,
   getStorageMode,
 } = require("./mongoStore");
 
@@ -45,6 +44,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+function recordMergeKey(record) {
+  return `${String(record.title || "").toLowerCase()}-${Number(record.latitude).toFixed(6)}-${Number(record.longitude).toFixed(6)}`;
+}
+
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, service: "intelligence-fusion-backend", storageMode: getStorageMode() });
 });
@@ -66,6 +69,23 @@ app.post("/api/reports", async (req, res) => {
     res.status(201).json({ record });
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+app.post("/api/reports/bulk", async (req, res) => {
+  try {
+    const input = Array.isArray(req.body) ? req.body : req.body?.records;
+    if (!Array.isArray(input)) {
+      return res.status(400).json({ error: "Request body must contain an array of records." });
+    }
+
+    const normalized = input.map((record) => normalizeRecord(record));
+    await upsertReports(normalized);
+
+    const reports = await listReports("ALL");
+    return res.json({ added: normalized.length, total: reports.length, records: reports });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 });
 
@@ -113,10 +133,31 @@ app.post("/api/upload/dataset", upload.single("dataset"), async (req, res) => {
     }
 
     const normalized = rows.map((row) => normalizeRecord(row));
-    await upsertReports(normalized);
+    const existing = await listReports("ALL");
+    const existingKeys = new Set(existing.map((record) => recordMergeKey(record)));
+
+    const dedupedToInsert = normalized.filter((record) => {
+      const key = recordMergeKey(record);
+      if (existingKeys.has(key)) {
+        return false;
+      }
+      existingKeys.add(key);
+      return true;
+    });
+
+    if (dedupedToInsert.length) {
+      await upsertReports(dedupedToInsert);
+    }
+
+    const skippedDuplicates = normalized.length - dedupedToInsert.length;
+
     const reports = await listReports("ALL");
 
-    res.status(201).json({ imported: normalized.length, total: reports.length });
+    res.status(201).json({
+      imported: dedupedToInsert.length,
+      skippedDuplicates,
+      total: reports.length,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   } finally {
@@ -147,10 +188,28 @@ app.post("/api/admin/deduplicate", (_req, res) => {
 });
 
 app.post("/api/seed", async (_req, res) => {
-  const seeded = sampleRecords.map((record) => normalizeRecord(record));
   try {
-    await replaceAllReports(seeded);
-    res.json({ seeded: seeded.length });
+    const existing = await listReports("ALL");
+
+    const existingKeys = new Set(
+      existing.map(
+        (record) => recordMergeKey(record),
+      ),
+    );
+
+    const seeded = sampleRecords
+      .map((record) => normalizeRecord(record))
+      .filter((record) => {
+        const key = recordMergeKey(record);
+        return !existingKeys.has(key);
+      });
+
+    if (seeded.length) {
+      await upsertReports(seeded);
+    }
+
+    const reports = await listReports("ALL");
+    res.json({ added: seeded.length, total: reports.length });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

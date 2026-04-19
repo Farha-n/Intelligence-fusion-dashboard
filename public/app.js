@@ -72,6 +72,26 @@ function normalizeRecord(row) {
   };
 }
 
+function recordMergeKey(record) {
+  return `${String(record.title || "").toLowerCase()}-${Number(record.latitude).toFixed(6)}-${Number(record.longitude).toFixed(6)}`;
+}
+
+function parseCsv(text) {
+  const lines = text.split(/\r?\n/).filter(Boolean);
+  if (!lines.length) {
+    return [];
+  }
+
+  const headers = lines[0].split(",").map((header) => header.trim());
+  return lines.slice(1).map((line) => {
+    const values = line.split(",").map((value) => value.trim());
+    return headers.reduce((row, header, index) => {
+      row[header] = values[index] || "";
+      return row;
+    }, {});
+  });
+}
+
 function markerIcon(record) {
   return L.divIcon({
     className: "",
@@ -220,7 +240,16 @@ function renderFeed() {
   const feedList = document.querySelector("#feedList");
   feedList.innerHTML = "";
 
-  visibleRecords()
+  const shownRecords = visibleRecords();
+  if (!shownRecords.length) {
+    const empty = document.createElement("p");
+    empty.className = "feed-empty";
+    empty.textContent = "No records match the current filter and search.";
+    feedList.appendChild(empty);
+    return;
+  }
+
+  shownRecords
     .slice()
     .reverse()
     .forEach((record) => {
@@ -344,16 +373,48 @@ async function readImageAndUpload(file) {
 }
 
 async function uploadDataset(file) {
-  const form = new FormData();
-  form.append("dataset", file);
+  const isJson = file.name.toLowerCase().endsWith(".json");
+  const isCsv = file.name.toLowerCase().endsWith(".csv");
+  if (!isJson && !isCsv) {
+    throw new Error("Please upload a CSV or JSON file.");
+  }
 
-  const result = await apiRequest("/api/upload/dataset", {
-    method: "POST",
-    body: form,
+  const text = await file.text();
+  const parsed = isJson ? JSON.parse(text) : parseCsv(text);
+  const rows = Array.isArray(parsed) ? parsed : parsed.records;
+  if (!Array.isArray(rows)) {
+    throw new Error("Uploaded file must contain an array of records.");
+  }
+
+  const uploadedRecords = rows.map((row) => normalizeRecord(row));
+  const existingKeys = new Set(records.map((record) => recordMergeKey(record)));
+
+  const newRecords = uploadedRecords.filter((record) => {
+    const key = recordMergeKey(record);
+    if (existingKeys.has(key)) {
+      return false;
+    }
+    existingKeys.add(key);
+    return true;
   });
 
+  if (newRecords.length) {
+    await apiRequest("/api/reports/bulk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ records: newRecords }),
+    });
+  }
+
+  const skippedDuplicates = uploadedRecords.length - newRecords.length;
+
   await refreshRecords();
-  alert(`Imported ${result.imported} records. Total: ${result.total}`);
+  if (newRecords.length === 0) {
+    alert(`Uploaded records already exist. Skipped duplicates: ${skippedDuplicates}.`);
+    return;
+  }
+
+  alert(`Added ${newRecords.length} uploaded records. Skipped duplicates: ${skippedDuplicates}.`);
 }
 
 async function updateBackendStatus() {
@@ -427,8 +488,13 @@ document.querySelector("#dataUpload").addEventListener("change", async (event) =
 
 document.querySelector("#loadSample").addEventListener("click", async () => {
   try {
-    await apiRequest("/api/seed", { method: "POST" });
+    const result = await apiRequest("/api/seed", { method: "POST" });
     await refreshRecords();
+    alert(
+      result.added === 0
+        ? "Sample records are already loaded."
+        : `Added ${result.added} sample records.`,
+    );
   } catch (error) {
     alert(error.message);
   }
@@ -504,15 +570,11 @@ dropzone.addEventListener("drop", async (event) => {
   if (!file) return;
 
   try {
-    if (/\.(jpg|jpeg|png|webp)$/i.test(file.name)) {
-      const imageUrl = await readImageAndUpload(file);
-      alert(`Image uploaded successfully: ${imageUrl}`);
-      return;
-    }
-
     await uploadDataset(file);
   } catch (error) {
     alert(error.message);
+  } finally {
+    document.querySelector("#dataUpload").value = "";
   }
 });
 
