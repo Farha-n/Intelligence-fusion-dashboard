@@ -108,8 +108,7 @@
         <section class="panel">
           <div class="section-heading">
             <h2>Upload Data</h2>
-            <p>Upload CSV or JSON intelligence records without removing existing data.</p>
-            <p>New uploads are merged with existing records.</p>
+            <p>Upload CSV or JSON records without removing existing intelligence data.</p>
           </div>
           <input id="dataUpload" type="file" accept=".csv,.json,application/json,text/csv" />
           <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload CSV or JSON file">
@@ -128,11 +127,12 @@
             <h2>System Logic</h2>
           </div>
           <ol>
-            <li>Ingest OSINT, HUMINT, IMINT reports</li>
-            <li>Normalize fields into a common schema</li>
-            <li>Store records in MongoDB</li>
-            <li>Plot nodes by latitude and longitude</li>
-            <li>Display metadata and images in hover popups</li>
+            <li>Ingest OSINT, HUMINT, and IMINT records</li>
+            <li>Normalize source-specific fields</li>
+            <li>Store reports in MongoDB</li>
+            <li>Plot records on the map</li>
+            <li>Cluster nearby intelligence points</li>
+            <li>Reveal image and metadata on interaction</li>
           </ol>
         </section>
       </section>

@@ -244,7 +244,7 @@ function renderFeed() {
   if (!shownRecords.length) {
     const empty = document.createElement("p");
     empty.className = "feed-empty";
-    empty.textContent = "No records match the current filter and search.";
+    empty.textContent = "No intelligence records match current filters.";
     feedList.appendChild(empty);
     return;
   }
@@ -275,7 +275,8 @@ function renderFeed() {
       item.addEventListener("click", () => {
         const marker = markers.get(record.id);
         if (!marker) return;
-        map.setView([record.latitude, record.longitude], 10);
+        document.querySelector("#map").scrollIntoView({ behavior: "smooth", block: "start" });
+        map.flyTo([record.latitude, record.longitude], 10, { duration: 0.7 });
         marker.openPopup();
       });
 

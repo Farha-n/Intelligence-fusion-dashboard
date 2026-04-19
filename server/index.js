@@ -191,17 +191,17 @@ app.post("/api/seed", async (_req, res) => {
   try {
     const existing = await listReports("ALL");
 
-    const existingKeys = new Set(
-      existing.map(
-        (record) => recordMergeKey(record),
-      ),
-    );
+    const existingKeys = new Set(existing.map((record) => recordMergeKey(record)));
 
     const seeded = sampleRecords
       .map((record) => normalizeRecord(record))
       .filter((record) => {
         const key = recordMergeKey(record);
-        return !existingKeys.has(key);
+        if (existingKeys.has(key)) {
+          return false;
+        }
+        existingKeys.add(key);
+        return true;
       });
 
     if (seeded.length) {
@@ -230,7 +230,21 @@ app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "index.html"));
 });
 
-app.listen(port, () => {
+async function start() {
+  const existing = await listReports("ALL");
+  if (!existing.length) {
+    const normalizedSamples = sampleRecords.map((record) => normalizeRecord(record));
+    await upsertReports(normalizedSamples);
+  }
+
+  app.listen(port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`Intelligence Fusion Dashboard backend running on http://localhost:${port}`);
+  });
+}
+
+start().catch((error) => {
   // eslint-disable-next-line no-console
-  console.log(`Intelligence Fusion Dashboard backend running on http://localhost:${port}`);
+  console.error("Failed to start Intelligence Fusion Dashboard backend:", error);
+  process.exit(1);
 });
